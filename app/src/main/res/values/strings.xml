@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">MusicPlayer</string>
+
+    <!--Activities labels-->
+    <string name="main_activity_label">Music Player</string>
+    <string name="single_song_activity_label"> Single song</string>
+
+    <!-- Tabs names -->
+    <string name="main_tabs_songs">Songs</string>
+    <string name="main_tabs_albums">Albums</string>
+    <string name="main_tabs_artists">Artists</string>
+    <string name="main_tabs_folders">Folders</string>
+    <string name="main_tabs_loops">Loops</string>
+    <string name="main_tabs_favourite">Favourite</string>
+
+    <!--Main activity-->
+
+    <string name="top_app_bar_search">search</string>
+    <string name="top_app_bar_search_description">Allow to find desired music</string>
+    <string name="top_app_bar_more">more</string>
+    <string name="top_app_bar_more_description">More options to top app bar</string>
+
+
+    <!-- Single song-->
+    <string name="single_song_app_bar_title">Now Playing</string>
+    <string name="single_song_top_app_bar_more">more</string>
+</resources>
