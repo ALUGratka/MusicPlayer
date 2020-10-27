@@ -1,11 +1,15 @@
 package pl.musicplayer.view.song;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
@@ -20,8 +24,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -65,6 +72,14 @@ public class SingleSongActivity extends AppCompatActivity implements MediaContro
             MediaPlaybackService.MusicBinder binder = (MediaPlaybackService.MusicBinder) service;
             musicService = binder.getService();
             onStart();
+
+            if(musicService.isPlaying()) {
+                pauseButton.setVisibility(View.VISIBLE);
+                playButton.setVisibility(View.GONE);
+            }else {
+                playButton.setVisibility(View.VISIBLE);
+                pauseButton.setVisibility(View.GONE);
+            }
         }
 
         @Override
@@ -93,11 +108,7 @@ public class SingleSongActivity extends AppCompatActivity implements MediaContro
             playIntent = new Intent(this, MediaPlaybackService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
-            playButton.setVisibility(View.VISIBLE);
-            pauseButton.setVisibility(View.GONE);
         }
-            playButton.setVisibility(View.GONE);
-            pauseButton.setVisibility(View.VISIBLE);
     }
 
 
@@ -119,7 +130,6 @@ public class SingleSongActivity extends AppCompatActivity implements MediaContro
 
         loadSongData(getCurrentSongId());
     }
-
 
 
     @OnClick(R.id.single_song_play_button)

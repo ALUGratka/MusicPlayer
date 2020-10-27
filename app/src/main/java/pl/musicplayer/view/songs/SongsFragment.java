@@ -1,6 +1,9 @@
 package pl.musicplayer.view.songs;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
@@ -21,6 +24,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -87,6 +92,10 @@ public class SongsFragment extends Fragment {
     private static Intent playIntent;
     private boolean musicBound = false;
 
+    private final static String CHANNEL_ID = "106";
+
+
+    /* Connecting to MediaPlaybackService */
     private final ServiceConnection musicConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -102,6 +111,17 @@ public class SongsFragment extends Fragment {
         }
     };
 
+    private void createNotificationChannel() {
+        CharSequence name = "channel_name";
+        String description = "channel_description";
+        int importance = NotificationManager.IMPORTANCE_MIN;
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+        channel.setDescription(description);
+
+        NotificationManager notificationManager = getContext().getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
+    }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -114,8 +134,15 @@ public class SongsFragment extends Fragment {
             musicNavigation.setVisibility(View.GONE);
 
         }
-        playButton.setVisibility(View.GONE);
-        pauseButton.setVisibility(View.VISIBLE);
+        else {
+            if(musicService.isPlaying()) {
+                pauseButton.setVisibility(View.VISIBLE);
+                playButton.setVisibility(View.GONE);
+            }else {
+                playButton.setVisibility(View.VISIBLE);
+                pauseButton.setVisibility(View.GONE);
+            }
+        }
     }
 
     @Override
@@ -191,6 +218,7 @@ public class SongsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ButterKnife.bind(this, view);
+        createNotificationChannel();
 
         layoutManager = new LinearLayoutManager(getActivity());
 

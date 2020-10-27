@@ -1,6 +1,7 @@
 package pl.musicplayer;
 
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ContentUris;
@@ -15,13 +16,21 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import java.util.List;
 
 import pl.musicplayer.data.Song;
 import pl.musicplayer.utils.StorageUtil;
+import pl.musicplayer.view.song.SingleSongActivity;
+import pl.musicplayer.view.songs.SongsFragment;
 
 public class MediaPlaybackService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnSeekCompleteListener, MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener, AudioManager.OnAudioFocusChangeListener {
+
+    private final static String CHANNEL_ID = "106";
+    int notificationId = 105;
 
     private MediaPlayer player;
     private AudioManager audioManager;
@@ -115,6 +124,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
             player.release();
         }
         removeAudioFocus();
+        stopForeground(true);
     }
 
     @Override
@@ -163,8 +173,44 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        //mp.start();
         playMusic();
+        initPlayNotification();
+    }
+
+    private void initPlayNotification() {
+        Song song = songs.get(new StorageUtil(this).getSongIndex());
+
+        Intent intent = new Intent(this, SingleSongActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_play)
+                .setTicker(song.getSongTitle())
+                .setOngoing(true)
+                .setContentIntent(pendingIntent)
+                .setContentTitle("Playing ")
+                .setContentText(song.getSongTitle());
+
+        startForeground(notificationId, builder.build());
+    }
+
+    private void initPauseNotification() {
+        Song song = songs.get(new StorageUtil(this).getSongIndex());
+
+        Intent intent = new Intent(this, SingleSongActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_pause)
+                .setTicker(song.getSongTitle())
+                .setOngoing(true)
+                .setContentIntent(pendingIntent)
+                .setContentTitle("Paused ")
+                .setContentText(song.getSongTitle());
+
+        startForeground(notificationId, builder.build());
     }
 
 
@@ -198,6 +244,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         if(player == null) return;
         if(player.isPlaying()) {
             player.stop();
+            stopForeground(true);
         }
     }
 
@@ -206,6 +253,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         if(player.isPlaying()) {
             player.pause();
             resumePosition = player.getCurrentPosition();
+            stopForeground(true);
+            initPauseNotification();
         }
     }
 
@@ -213,6 +262,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         if(!player.isPlaying()){
             player.seekTo(resumePosition);
             player.start();
+            stopForeground(true);
+            initPlayNotification();
         }
     }
 
