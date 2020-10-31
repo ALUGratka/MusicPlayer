@@ -130,7 +130,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (requestAudioFocus() == false) {
-            //Could not gain focus
             stopSelf();
         }
         return START_STICKY;
@@ -213,6 +212,9 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         startForeground(notificationId, builder.build());
     }
 
+    public MediaPlayer getPlayer() {
+        return player;
+    }
 
     public void playSong() {
         player.reset();
@@ -249,7 +251,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void pauseMedia() {
-        if(player == null) return;
         if(player.isPlaying()) {
             player.pause();
             resumePosition = player.getCurrentPosition();
@@ -267,10 +268,6 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
-    public MediaPlayer getMusicPlayer() {
-        return player;
-    }
-
     public int getSongDuration() {
         return player.getDuration();
     }
@@ -280,7 +277,8 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public boolean isPlaying() {
-        return player.isPlaying();
+        if(player!=null) return player.isPlaying();
+        else return false;
     }
 
     public void seek(int songPosition) {

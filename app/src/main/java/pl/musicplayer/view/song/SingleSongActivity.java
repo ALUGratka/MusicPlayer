@@ -111,6 +111,17 @@ public class SingleSongActivity extends AppCompatActivity implements MediaContro
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        StorageUtil storageUtil = new StorageUtil(this);
+        int currentSongId = storageUtil.getSongIndex();
+        if(currentSongId!=-1) {
+            songTitle.setText(songList.get(currentSongId).getSongTitle());
+            songTitle.setSelected(true);
+            songArtist.setText(songList.get(currentSongId).getSongArtist());
+        }
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -188,17 +199,6 @@ public class SingleSongActivity extends AppCompatActivity implements MediaContro
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.single_song_app_bar, menu);
         return true;
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        finish();
-        return true;
-    }
-
-    @Override
-    public void onBackPressed() {
-        finish();
     }
 
     @Override

@@ -35,7 +35,8 @@
             android:parentActivityName=".view.MainActivity"
             android:screenOrientation="portrait"/>
 
-        <service android:name=".MediaPlaybackService" />
+        <service android:name=".MediaPlaybackService"/>
+
     </application>
 
 </manifest>

@@ -16,12 +16,10 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <ProgressBar
-            android:id="@+id/music_progress_bar"
+        <SeekBar
+            android:id="@+id/music_seek_bar"
             android:layout_width="match_parent"
-            android:layout_height="5dp"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:progress="25"/>
+            android:layout_height="wrap_content" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
