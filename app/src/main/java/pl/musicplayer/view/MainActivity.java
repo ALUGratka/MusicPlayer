@@ -22,6 +22,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import pl.musicplayer.MediaPlaybackService;
 import pl.musicplayer.R;
 import pl.musicplayer.data.Song;
 import pl.musicplayer.view.albums.AlbumsFragment;
@@ -69,5 +70,4 @@ public class MainActivity extends AppCompatActivity {
         sectionsPagerAdapter.addPage(new FavouriteFragment(), getString(R.string.main_tabs_favourite));
         viewPager.setAdapter(sectionsPagerAdapter);
     }
-
 }

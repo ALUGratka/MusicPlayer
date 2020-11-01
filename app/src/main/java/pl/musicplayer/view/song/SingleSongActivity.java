@@ -11,6 +11,7 @@ import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.view.Menu;
@@ -18,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.MediaController;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,8 +44,9 @@ import pl.musicplayer.MusicController;
 import pl.musicplayer.R;
 import pl.musicplayer.data.Song;
 import pl.musicplayer.utils.StorageUtil;
+import pl.musicplayer.view.base.BaseFragment;
 
-public class SingleSongActivity extends AppCompatActivity implements MediaController.MediaPlayerControl {
+public class SingleSongActivity extends AppCompatActivity {
 
     @BindView(R.id.single_song_top_bar)
     Toolbar toolbar;
@@ -60,11 +63,13 @@ public class SingleSongActivity extends AppCompatActivity implements MediaContro
     @BindView(R.id.single_song_pause_button)
     ImageView pauseButton;
 
+    @BindView(R.id.single_song_seek_bar)
+    SeekBar seekBar;
+
     private List<Song> songList;
-    private MusicController musicController;
     private MediaPlaybackService musicService;
     private static Intent playIntent;
-    private final boolean musicBound = false;
+    protected Handler handler = new Handler();
 
     private final ServiceConnection musicConnection = new ServiceConnection() {
         @Override
@@ -76,6 +81,7 @@ public class SingleSongActivity extends AppCompatActivity implements MediaContro
             if(musicService.isPlaying()) {
                 pauseButton.setVisibility(View.VISIBLE);
                 playButton.setVisibility(View.GONE);
+                StrartbarUpdate();
             }else {
                 playButton.setVisibility(View.VISIBLE);
                 pauseButton.setVisibility(View.GONE);
@@ -140,6 +146,7 @@ public class SingleSongActivity extends AppCompatActivity implements MediaContro
         attachService();
 
         loadSongData(getCurrentSongId());
+        seekBar.setOnSeekBarChangeListener(new ProgressBarListener());
     }
 
 
@@ -236,69 +243,43 @@ public class SingleSongActivity extends AppCompatActivity implements MediaContro
         }
     }
 
-    @Override
-    public void start() {
-        musicService.playMusic();
-    }
+    class ProgressBarListener implements SeekBar.OnSeekBarChangeListener {
 
-    @Override
-    public void pause() {
-        musicService.pauseMedia();
-    }
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (fromUser==true) {
+                musicService.getPlayer().seekTo(progress);
+            }
 
-    @Override
-    public int getDuration() {
-        if(musicService != null && musicService.isPlaying() && musicBound)
-            return musicService.getSongDuration();
-        else return 0;
-    }
-
-    @Override
-    public int getCurrentPosition() {
-        if(musicService != null && musicService.isPlaying() && musicBound)
-            return musicService.getSongPosition();
-        else return 0;
-    }
-
-    @Override
-    public void seekTo(int pos) {
-        musicService.seek(pos);
-    }
-
-    @Override
-    public boolean isPlaying() {
-        if( musicService!=null && musicBound) {
-            return musicService.isPlaying();
         }
-        return false;
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
     }
 
-    @Override
-    public int getBufferPercentage() {
-        return 0;
-    }
 
-    @Override
-    public boolean canPause() {
-        return true;
+    public void StrartbarUpdate(){
+        handler.post(r);
     }
+    Runnable r=new Runnable() {
 
-    @Override
-    public boolean canSeekBackward() {
-        return true;
-    }
+        @Override
+        public void run() {
+            // TODO Auto-generated method stub
+            int CurrentPosition=musicService.getPlayer().getCurrentPosition();
 
-    @Override
-    public boolean canSeekForward() {
-        return true;
-    }
+            int mMax=musicService.getSongDuration();
+            seekBar.setMax(mMax);
+            seekBar.setProgress(CurrentPosition);
+            handler.postDelayed(r, 300);
+        }
+    };
 
-    @Override
-    public int getAudioSessionId() {
-        return 0;
-    }
-
-    public void setMusicController() {
-        musicController = new MusicController(this);
-    }
 }

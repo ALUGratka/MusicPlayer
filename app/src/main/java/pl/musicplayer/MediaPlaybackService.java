@@ -145,6 +145,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Override
     public void onCompletion(MediaPlayer mp) {
         StorageUtil storageUtil = new StorageUtil(this);
+
         mp.reset();
         if (player.getCurrentPosition() != songs.size() - 1) {
             storageUtil.setSongIndex(storageUtil.getSongIndex()+1);;
@@ -176,7 +177,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         initPlayNotification();
     }
 
-    private void initPlayNotification() {
+    public void initPlayNotification() {
         Song song = songs.get(new StorageUtil(this).getSongIndex());
 
         Intent intent = new Intent(this, SingleSongActivity.class);
@@ -229,6 +230,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
         }catch (Exception e) {
             Log.e("MUSIC SERVICE", "Error setting data source", e);
         }
+        player.setOnPreparedListener(this::onPrepared);
         player.prepareAsync();
     }
 
@@ -237,6 +239,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void playMusic() {
+        if(player == null) return;
         if(!player.isPlaying()) {
             player.start();
         }
@@ -251,6 +254,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void pauseMedia() {
+        if(player == null) return;
         if(player.isPlaying()) {
             player.pause();
             resumePosition = player.getCurrentPosition();
@@ -260,6 +264,7 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void resumeMedia() {
+        if(player == null) return;
         if(!player.isPlaying()){
             player.seekTo(resumePosition);
             player.start();
@@ -286,18 +291,22 @@ public class MediaPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public void playPrev() {
+        if(player == null) return;
         StorageUtil storageUtil = new StorageUtil(this);
         int songPosition = storageUtil.getSongIndex()-1;
         if(songPosition<0) storageUtil.setSongIndex(songs.size()-1);
         else storageUtil.setSongIndex(songPosition);
+
         playSong();
     }
 
     public void playNext() {
+        if(player == null) return;
         StorageUtil storageUtil = new StorageUtil(this);
         int songPosition = storageUtil.getSongIndex()+1;
         if(songPosition==songs.size()) storageUtil.setSongIndex(0);
         else storageUtil.setSongIndex(songPosition);
+
         playSong();
     }
 }

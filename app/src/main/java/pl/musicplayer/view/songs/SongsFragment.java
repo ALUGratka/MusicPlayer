@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,7 @@ import pl.musicplayer.data.Song;
 import pl.musicplayer.ui.CustomTouchListener;
 import pl.musicplayer.utils.StorageUtil;
 import pl.musicplayer.view.base.BaseFragment;
+import pl.musicplayer.view.base.MusicControllerView;
 
 public class SongsFragment extends BaseFragment {
 
@@ -49,7 +51,7 @@ public class SongsFragment extends BaseFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        ButterKnife.bind(this, view);
+
         createNotificationChannel();
 
         layoutManager = new LinearLayoutManager(getActivity());
@@ -67,6 +69,8 @@ public class SongsFragment extends BaseFragment {
 
         Intent service = new Intent(getContext(), MediaPlaybackService.class);
         getContext().bindService(service, musicConnection, Service.BIND_AUTO_CREATE);
+
+
     }
 
     @Nullable
@@ -76,26 +80,22 @@ public class SongsFragment extends BaseFragment {
     }
 
     private void initRecyclerView() {
-
         if (listOfSongs.size() > 0) {
             songView.setAdapter(songsAdapter);
             songView.setLayoutManager(layoutManager);
             songView.addOnItemTouchListener(new CustomTouchListener(this.getContext(), (view, index) -> {
                 StorageUtil storageUtil = new StorageUtil(getContext());
                 storageUtil.setSongIndex(index);
-                musicService.setSong(index);
-                musicService.playSong();
+                Log.d("SONG_INDEX", String.valueOf(storageUtil.getSongIndex()));
                 playButton.setVisibility(View.GONE);
                 pauseButton.setVisibility(View.VISIBLE);
                 songTitle.setText(listOfSongs.get(index).getSongTitle());
                 songTitle.setSelected(true);
                 songArtist.setText(listOfSongs.get(index).getSongArtist());
                 musicNavigation.setVisibility(View.VISIBLE);
-                //controller.show(musicService.getSongDuration());
+                musicService.playSong();
+                //StrartbarUpdate();
             }));
-
-
         }
     }
-
 }

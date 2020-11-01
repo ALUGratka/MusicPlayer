@@ -12,12 +12,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
-import android.view.Menu;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.MediaController;
-import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -26,9 +23,12 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
+
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import butterknife.OnClick;
 import pl.musicplayer.MediaPlaybackService;
 import pl.musicplayer.MusicController;
@@ -37,7 +37,7 @@ import pl.musicplayer.data.Song;
 import pl.musicplayer.navigation.Navigator;
 import pl.musicplayer.utils.StorageUtil;
 
-public class BaseFragment extends Fragment implements MediaController.MediaPlayerControl {
+public class BaseFragment extends Fragment {
 
     @SuppressLint("NonConstantResourceId")
     @BindView(R.id.song_list)
@@ -48,8 +48,8 @@ public class BaseFragment extends Fragment implements MediaController.MediaPlaye
     protected LinearLayout musicNavigation;
 
     @SuppressLint("NonConstantResourceId")
-    @BindView(R.id.music_seek_bar)
-    protected SeekBar seekBarController;
+    @BindView(R.id.music_progress_bar)
+    protected SeekBar progressBarController;
 
     @SuppressLint("NonConstantResourceId")
     @BindView(R.id.button_play)
@@ -79,9 +79,8 @@ public class BaseFragment extends Fragment implements MediaController.MediaPlaye
     protected MediaPlaybackService musicService;
     private static Intent playIntent;
     private boolean musicBound = false;
-    Runnable runnable;
     protected Handler handler = new Handler();
-    protected MusicController controller;
+
 
     /* Connecting to MediaPlaybackService */
     protected final ServiceConnection musicConnection = new ServiceConnection() {
@@ -95,12 +94,13 @@ public class BaseFragment extends Fragment implements MediaController.MediaPlaye
             if(musicService.isPlaying()) {
                 pauseButton.setVisibility(View.VISIBLE);
                 playButton.setVisibility(View.GONE);
+                StrartbarUpdate();
             }else if(!musicService.isPlaying()) {
                 playButton.setVisibility(View.VISIBLE);
                 pauseButton.setVisibility(View.GONE);
             }
 
-            //attachMusic();
+
         }
         @Override
         public void onServiceDisconnected(ComponentName name) {
@@ -108,61 +108,11 @@ public class BaseFragment extends Fragment implements MediaController.MediaPlaye
         }
     };
 
-    private void setController() {
-        controller = new MusicController(getContext());
-
-
-        controller.setMediaPlayer(this);
-        controller.setAnchorView(getView().findViewById(R.id.song_list));
-        controller.setEnabled(true);
-    }
-
-    protected void setControls() {
-
-        seekBarController.setMax(musicService.getSongDuration());
-        seekBarController.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(fromUser) {
-                    musicService.seek(progress);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        playCircle();
-    }
-
-    private void playCircle() {
-        try{
-            seekBarController.setProgress(musicService.getSongPosition());
-            if(musicService.isPlaying()){
-                runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        playCircle();
-                    }
-                };
-                handler.postDelayed(runnable, 100);
-            }
-
-        }catch (Exception e) {
-
-        }
-    }
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        //setController();
+        ButterKnife.bind(this, view);
+        progressBarController.setOnSeekBarChangeListener(new ProgressBarListener());
     }
 
     @Override
@@ -176,9 +126,7 @@ public class BaseFragment extends Fragment implements MediaController.MediaPlaye
             StorageUtil storageUtil = new StorageUtil(getContext());
             storageUtil.setSongIndex(-1);
         }
-
         getContext().bindService(playIntent, musicConnection, Service.BIND_AUTO_CREATE);
-
     }
 
 
@@ -234,7 +182,6 @@ public class BaseFragment extends Fragment implements MediaController.MediaPlaye
         }
     }
 
-
     protected void getSongList() {
         String[] projection = new String[]{MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST};
         String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
@@ -264,63 +211,43 @@ public class BaseFragment extends Fragment implements MediaController.MediaPlaye
         }
     }
 
-    @Override
-    public void start() {
-        musicService.playMusic();
-    }
+    class ProgressBarListener implements SeekBar.OnSeekBarChangeListener {
 
-    @Override
-    public void pause() {
-        musicService.pauseMedia();
-    }
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (fromUser==true) {
+                musicService.getPlayer().seekTo(progress);
+            }
 
-    @Override
-    public int getDuration() {
-        if(musicService != null && musicBound && musicService.isPlaying()) return musicService.getSongDuration();
-        else return 0;
-    }
-
-    @Override
-    public int getCurrentPosition() {
-        if(musicService != null && musicBound && musicService.isPlaying()) return musicService.getSongPosition();
-        else return 0;
-    }
-
-    @Override
-    public void seekTo(int pos) {
-        musicService.seek(pos);
-    }
-
-    @Override
-    public boolean isPlaying() {
-        if(musicService != null && musicBound) {
-            return musicService.isPlaying();
         }
-        return false;
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
+        }
     }
 
-    @Override
-    public int getBufferPercentage() {
-        return 0;
-    }
 
-    @Override
-    public boolean canPause() {
-        return true;
+    public void StrartbarUpdate(){
+        handler.post(r);
     }
+    Runnable r=new Runnable() {
 
-    @Override
-    public boolean canSeekBackward() {
-        return false;
-    }
+        @Override
+        public void run() {
+            // TODO Auto-generated method stub
+            int CurrentPosition=musicService.getPlayer().getCurrentPosition();
 
-    @Override
-    public boolean canSeekForward() {
-        return false;
-    }
+            int mMax=musicService.getSongDuration();
+            progressBarController.setMax(mMax);
+            progressBarController.setProgress(CurrentPosition);
+            handler.postDelayed(r, 300);
+        }
+    };
 
-    @Override
-    public int getAudioSessionId() {
-        return 0;
-    }
 }
